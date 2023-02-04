@@ -7,6 +7,7 @@ const apiToken = require('./token.json')
 const orgId = require('./orgs.json').importOrg
 const templates = require('./templates.json')
 const siteData = require('./sites.json')
+const siteGroups = require('./site-groups.json')
 
 // variables
 var restReqConfig = { headers: { Authorization: `Token ${apiToken.token1}` }}
@@ -20,10 +21,13 @@ async function createSite(site) {
   siteCreateAttempts++
 
   try {
-    // POST https://api.mist.com/api/v1/orgs/${orgId}/sites
-    let response = await rest.post(`https://api.mist.com/api/v1/orgs/${orgId}/sites`, site, restReqConfig)
+    // POST https://api.mist.com/api/v1/orgs/${orgId}/sites to create new site
+    let newSite = await rest.post(`https://api.mist.com/api/v1/orgs/${orgId}/sites`, site, restReqConfig)
+    // PUT https://api.mist.com/api/v1/sites/${siteId}/setting to update site settings
+    await rest.put(`https://api.mist.com/api/v1/sites/${newSite.data.id}/setting`, {vars:site.vars}, restReqConfig)
+
     siteCreateSuccesses++
-    console.log(`'${response.data.name}' site create success!`)
+    console.log(`'${newSite.data.name}' site create success!`)
 
   } catch (error) {
 
@@ -51,18 +55,28 @@ async function begin(){
       country_code: site.country_code,
       address: site.address,
       latlng: site.latlng,
-      timezone: site.timezone
+      timezone: site.timezone,
+      vars : {
+        RegionID : `${site.network2ndOctet}`,
+        SiteID : `${site.network3rdOctet}`
+      }
     }
 
-    // match type name to template
+    // match and set template based on site type
     if (templates[site.type]) {
       siteConfig = {
         ...siteConfig,
         ...templates[site.type]
       }
     }
+
+    // match and set sitegroups based on region
+    if (siteGroups[site.region]) {
+      siteConfig.sitegroup_ids = [ siteGroups[site.region] ]
+    }
     
     await createSite(siteConfig)
+    // console.log(siteConfig)
   }
 
   const end = new Date()

@@ -78,7 +78,18 @@ node create-sites.js
 
 ### Cleanup Sites
 
-To delete all sites except the default "Primary Site" from `cleanupOrg`:
+To delete all sites from `cleanupOrg`:
 ```
 node cleanup-sites.js
+```
+For sites to skip deletion, create `ignore.json` with an array of site ID strings. Sites with IDs found in the array will not be deleted.
+
+Example `ignore.json`:
+```
+[
+  "3e15ea78-4222-4e82-a6e7-885318b713a5",
+  "4f8164c8-7238-4d4c-9f9a-aa4a1c3cd414",
+  "67014ce1-a173-42e3-9f98-c8e644b2cb02",
+  "91528be7-7518-4afd-8d9b-0572458001ff"
+]
 ```

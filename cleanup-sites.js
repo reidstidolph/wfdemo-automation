@@ -6,12 +6,14 @@ const readline = require('readline')
 // import token and org to cleanup sites from
 const apiToken = require('./token.json').token2
 const orgId = require('./orgs.json').cleanupOrg
+const ignoreSites = require('./ignore.json')
 
 // variables
 const restReqConfig = { headers: { Authorization: `Token ${apiToken}` }}
 const userInput = readline.createInterface({input: process.stdin,output: process.stdout})
 let siteDeleteSuccesses = 0
 let siteDeleteFailures = 0
+let skipped = 0
 
 // are you sure?
 userInput.question(`WARNING: This will delete all sites from org ID ${orgId}. Proceed? (y/n)\n`, async (input)=>{
@@ -73,13 +75,15 @@ async function begin() {
 
     // delete sites
     for (const site of siteData) {
-      // skip default primary site
-      if (site.name != "Primary Site") {
+      if (ignoreSites.find(siteId => siteId === site.id)) {
+        console.log(`skipping site ${site.name}`)
+        skipped++
+      } else {
         await deleteSite(site)
       }
     }
 
-    console.log(`\nsite deletion report: ${siteDeleteSuccesses} succeeded, ${siteDeleteFailures} failed.\n`)
+    console.log(`\nsite deletion report: ${siteDeleteSuccesses} succeeded, ${siteDeleteFailures} failed, ${skipped} skipped.\n`)
 
   } catch (error) {
     // handle error
